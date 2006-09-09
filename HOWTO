@@ -1,0 +1,45 @@
+#!/bin/bash
+#  
+
+echo "   ====== Despite what it looks like,  this isn't automated. ==== "
+echo "
+echo " Here's what you need to do first...."
+echo "Follow the instructions on the E-smith FAX HOWTO.  That will make"
+echo "you download lots of RPMs,  including Hylafax."
+echo
+echo "Be overly pessimistic about permissions in etc/config.ttyS0"
+echo "I ended up with "
+echo "RecvFileMode:           0666"
+echo
+echo "Got everything now? "
+read
+echo "Really sure? "
+read
+
+###############################################################
+#
+# Copy my PS to PCL program into /usr/local/bin (check #! path)
+# 
+
+cd /usr/local/bin
+wget http://www.ifost.org.au/~gregb/programs/ps2pcl
+cd -
+
+#########
+echo "Now go and install the metamail RPM: "
+read
+
+cd /var/spool/hylafax/bin/
+
+wget http://www.ifost.org.au/~gregb/programs/faxrcvd
+wget http://www.ifost.org.au/~gregb/programs/faxrcvd-mail
+
+chmod +x faxrcvd
+chmod +x faxrcvd-mail
+
+echo "It would be nice to have a manager interface to"
+echo "  a) set the modem device"
+echo "  b) say whether you want printing,  emailed attachments, "
+echo " and/or saving to an i-bay."
+
+
