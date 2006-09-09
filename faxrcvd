@@ -1,0 +1,67 @@
+#! /bin/sh
+#
+# /var/spool/hylafax/bin/faxrcvd
+# Noel Burton-Krahn <noel@burton-krahn.com>
+# Sept 4, 1999
+#
+# 
+# faxrcvd file devID commID error-msg
+#
+# modified faxrcvd from hylafax which calls faxrcvd-mail
+#
+if [ $# != 4 ]; then
+    echo "Usage: $0 file devID commID error-msg"
+    exit 1
+fi
+FILE="$1"
+DEVICE="$2"
+COMMID="$3"
+MSG="$4"
+TRUNCFILE=`echo $FILE | sed -e 's/\.tif//'`
+
+test -f etc/setup.cache || {
+    SPOOL=`pwd`
+    cat<<EOF
+
+FATAL ERROR: $SPOOL/etc/setup.cache is missing!
+
+The file $SPOOL/etc/setup.cache is not present.  This
+probably means the machine has not been setup using the faxsetup(1M)
+command.  Read the documentation on setting up HylaFAX before you
+startup a server system.
+
+EOF
+    exit 1
+}
+. etc/setup.cache
+
+/usr/bin/tiff2ps -a -O $SPOOL/$TRUNCFILE.ps $SPOOL/$FILE
+/usr/local/bin/ps2pcl $SPOOL/$TRUNCFILE.ps $SPOOL/$TRUNCFILE.pcl
+
+TOADDR=FaxMaster
+PATH="$SPOOL/sbin:$SPOOL/bin:$PATH"
+
+#
+# If you're using faxcron and would like to have the recvq file removed if
+# mail delivery was successful, then uncomment this if clause and comment
+# the line(s) following.
+#
+#if faxrcvd-mail "$FILE" "$DEVICE" "$COMMID" "$MSG" "$TOADDR" fax "$TRUNCFILE.ps" | \
+#/usr/sbin/sendmail $TOADDR; then
+#	rm -f $SPOOL/$TRUNCFILE*
+#fi
+
+
+# Email it ...
+faxrcvd-mail "$FILE" "$DEVICE" "$COMMID" "$MSG" "$TOADDR" fax  | \
+ /usr/sbin/sendmail $TOADDR
+
+# Print it
+lpr -Pbrother $SPOOL/$TRUNCFILE.pcl
+
+# Save it to the "faxes" i-bay
+cp $FILE /home/e-smith/files/ibays/faxes/darwin
+
+# Remove PS and PCL files
+rm -f $SPOOL/$TRUNCFILE.ps
+rm -f $SPOOL/$TRUNCFILE.pcl
